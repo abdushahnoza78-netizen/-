@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PEREC — магазин соусов</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #171310;
+    --surface: #211c17;
+    --surface-2: #2a231d;
+    --line: #372e26;
+    --text: #f3ede4;
+    --text-dim: #a89c8a;
+    --fire: #e34a1f;
+    --fire-dim: #7a2a13;
+    --turmeric: #e8a920;
+    --herb: #7a9b57;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    padding-bottom: 100px;
+  }
+
+  .display {
+    font-family: 'Fjalla One', sans-serif;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: linear-gradient(180deg, var(--bg) 70%, rgba(23,19,16,0));
+    padding: 16px 16px 8px;
+  }
+  .brand-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .brand .display {
+    font-size: 26px;
+    color: var(--text);
+  }
+  .brand .dot { color: var(--fire); }
+  .brand-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    letter-spacing: 0.04em;
+  }
+  .cart-icon {
+    position: relative;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .cart-count {
+    position: absolute;
+    top: -4px; right: -4px;
+    background: var(--fire);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    min-width: 17px; height: 17px;
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px;
+  }
+
+  .chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 14px 16px 4px;
+    scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: 0 0 auto;
+    padding: 7px 14px;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+  .chip.active {
+    background: var(--fire);
+    border-color: var(--fire);
+    color: #fff;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .photo {
+    height: 118px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    position: relative;
+  }
+  .p-teriyaki { background: linear-gradient(150deg,#5c3a12,#a3661c); }
+  .p-bbq { background: linear-gradient(150deg,#5e1a05,#b8420f); }
+  .p-garlic { background: linear-gradient(150deg,#4a4433,#8c8264); }
+  .p-chili { background: linear-gradient(150deg,#6b0d0d,#e34a1f); }
+
+  .badge {
+    position: absolute;
+    top: 8px; left: -6px;
+    background: var(--turmeric);
+    color: #201700;
+    font-size: 9.5px;
+    font-weight: 800;
+    padding: 3px 10px;
+    transform: rotate(-6deg);
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .fresh {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: rgba(122,155,87,0.9);
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 4px;
+  }
+  .card-body {
+    padding: 10px 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+  }
+  .p-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .heat {
+    display: flex;
+    gap: 3px;
+    font-size: 11px;
+  }
+  .heat span { opacity: 0.25; }
+  .heat span.on { opacity: 1; }
+  .p-vol {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .bottom-row {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .price {
+    font-family: 'Fjalla One', sans-serif;
+    font-size: 15px;
+    color: var(--turmeric);
+  }
+  .add-btn {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--fire);
+    color: #fff;
+    border: none;
+    font-size: 17px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--fire-dim);
+    border-radius: 8px;
+    padding: 2px 4px;
+  }
+  .stepper button {
+    width: 24px; height: 24px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .stepper .qty {
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 14px;
+    text-align: center;
+  }
+
+  .cart-bar {
+    position: fixed;
+    left: 12px; right: 12px; bottom: 14px;
+    background: var(--fire);
+    border-radius: 14px;
+    padding: 13px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 8px 24px rgba(227,74,31,0.35);
+    transform: translateY(140%);
+    transition: transform 0.25s ease;
+    z-index: 30;
+  }
+  .cart-bar.show { transform: translateY(0); }
+  .cart-bar .left {
+    display: flex;
+    flex-direction: column;
+  }
+  .cart-bar .count {
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+  }
+  .cart-bar .total {
+    font-family: 'Fjalla One', sans-serif;
+    font-size: 17px;
+    color: #fff;
+  }
+  .cart-bar .checkout {
+    background: #fff;
+    color: var(--fire);
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-weight: 800;
+    font-size: 13.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 40;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+
+  .drawer {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    z-index: 41;
+    padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .drawer.show { transform: translateY(0); }
+  .drawer-handle {
+    width: 36px; height: 4px;
+    background: var(--line);
+    border-radius: 2px;
+    margin: 0 auto 14px;
+  }
+  .drawer h3 {
+    font-family: 'Fjalla One', sans-serif;
+    font-weight: 400;
+    font-size: 20px;
+    margin: 0 0 12px;
+  }
+  .line-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13.5px;
+  }
+  .line-item .name { color: var(--text); }
+  .line-item .sub { color: var(--text-dim); font-size: 11.5px; }
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0 16px;
+    font-family: 'Fjalla One', sans-serif;
+    font-size: 17px;
+    color: var(--turmeric);
+  }
+  .field {
+    margin-bottom: 10px;
+  }
+  .field label {
+    display: block;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .field input {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Manrope', sans-serif;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--fire);
+  }
+  .submit-btn {
+    width: 100%;
+    background: var(--fire);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-weight: 800;
+    font-size: 14.5px;
+    margin-top: 6px;
+    cursor: pointer;
+  }
+  .location-btn {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--fire);
+    color: var(--fire);
+    border-radius: 10px;
+    padding: 11px;
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  .location-btn.confirmed {
+    background: rgba(122,155,87,0.15);
+    border-color: var(--herb);
+    color: var(--herb);
+  }
+  .location-status {
+    font-size: 11.5px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    min-height: 14px;
+  }
+  .empty-cart {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+    padding: 20px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-row">
+    <div>
+      <div class="brand"><span class="display">PEREC<span class="dot">.</span></span></div>
+      <div class="brand-sub">острые и пряные соусы · Ташкент</div>
+    </div>
+    <div class="cart-icon" onclick="openCart()">
+      🛒
+      <div class="cart-count" id="cartCount" style="display:none;">0</div>
+    </div>
+  </div>
+</header>
+
+<div class="chips">
+  <div class="chip active" data-cat="all">Все</div>
+  <div class="chip" data-cat="asian">Азиатские</div>
+  <div class="chip" data-cat="bbq">Барбекю</div>
+  <div class="chip" data-cat="spicy">Острые</div>
+  <div class="chip" data-cat="creamy">Кремовые</div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="cart-bar" id="cartBar">
+  <div class="left">
+    <div class="count" id="cartBarCount">0 товаров</div>
+    <div class="total" id="cartBarTotal">0 сум</div>
+  </div>
+  <button class="checkout" onclick="openCart()">Корзина →</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeCart()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-handle"></div>
+  <h3>Ваш заказ</h3>
+  <div id="lineItems"></div>
+  <div class="total-row" id="drawerTotal" style="display:none;">
+    <span>Итого</span><span id="drawerTotalValue">0 сум</span>
+  </div>
+
+  <div id="checkoutForm" style="display:none;">
+    <div class="field">
+      <label>Имя</label>
+      <input type="text" id="fName" placeholder="Как к вам обращаться">
+    </div>
+    <div class="field">
+      <label>Телефон</label>
+      <input type="tel" id="fPhone" placeholder="+998 90 123 45 67">
+    </div>
+    <div class="field">
+      <label>Доставка</label>
+      <button type="button" class="location-btn" id="locationBtn" onclick="requestLocation()">📍 Отправить геопозицию</button>
+      <div class="location-status" id="locationStatus"></div>
+      <input type="text" id="fAddress" placeholder="или впиши адрес вручную" style="margin-top:8px;">
+    </div>
+    <button class="submit-btn" onclick="submitOrder()">Оформить заказ</button>
+  </div>
+</div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.expand(); tg.ready(); }
+
+const PRODUCTS = [
+  { id: 'teriyaki', name: 'Соус Терияки', vol: '300 мл', price: 28000, heat: 1, cat: 'asian', photo: 'p-teriyaki', emoji: '🍯', badge: 'Хит' },
+  { id: 'bbq', name: 'Соус Барбекю', vol: '300 мл', price: 25000, heat: 2, cat: 'bbq', photo: 'p-bbq', emoji: '🔥' },
+  { id: 'garlic', name: 'Чесночный соус', vol: '250 мл', price: 22000, heat: 0, cat: 'creamy', photo: 'p-garlic', emoji: '🧄', fresh: true },
+  { id: 'chili', name: 'Острый соус Чили', vol: '250 мл', price: 24000, heat: 3, cat: 'spicy', photo: 'p-chili', emoji: '🌶️' },
+];
+
+const cart = {};
+let activeCat = 'all';
+
+function heatDots(level) {
+  let out = '';
+  for (let i = 0; i < 3; i++) {
+    out += `<span class="${i < level ? 'on' : ''}">🌶️</span>`;
+  }
+  return out;
+}
+
+function formatPrice(n) {
+  return n.toLocaleString('ru-RU').replace(/,/g, ' ') + ' сум';
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const items = PRODUCTS.filter(p => activeCat === 'all' || p.cat === activeCat);
+  items.forEach(p => {
+    const qty = cart[p.id] || 0;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="photo ${p.photo}">
+        ${p.emoji}
+        ${p.badge ? `<div class="badge">${p.badge}</div>` : ''}
+        ${p.fresh ? `<div class="fresh">свежее</div>` : ''}
+      </div>
+      <div class="card-body">
+        <div class="p-name">${p.name}</div>
+        <div class="heat">${heatDots(p.heat)}</div>
+        <div class="p-vol">${p.vol}</div>
+        <div class="bottom-row">
+          <div class="price">${formatPrice(p.price)}</div>
+          ${qty > 0
+            ? `<div class="stepper">
+                 <button onclick="changeQty('${p.id}', -1)">−</button>
+                 <div class="qty">${qty}</div>
+                 <button onclick="changeQty('${p.id}', 1)">+</button>
+               </div>`
+            : `<button class="add-btn" onclick="changeQty('${p.id}', 1)">+</button>`
+          }
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function changeQty(id, delta) {
+  cart[id] = (cart[id] || 0) + delta;
+  if (cart[id] <= 0) delete cart[id];
+  renderGrid();
+  updateCartBar();
+}
+
+function cartEntries() {
+  return Object.entries(cart).map(([id, qty]) => ({ product: PRODUCTS.find(p => p.id === id), qty }));
+}
+
+function cartTotal() {
+  return cartEntries().reduce((sum, e) => sum + e.product.price * e.qty, 0);
+}
+
+function cartCount() {
+  return Object.values(cart).reduce((a, b) => a + b, 0);
+}
+
+function updateCartBar() {
+  const count = cartCount();
+  const bar = document.getElementById('cartBar');
+  const countBadge = document.getElementById('cartCount');
+  if (count > 0) {
+    bar.classList.add('show');
+    countBadge.style.display = 'flex';
+    countBadge.textContent = count;
+  } else {
+    bar.classList.remove('show');
+    countBadge.style.display = 'none';
+  }
+  document.getElementById('cartBarCount').textContent = `${count} товар${count === 1 ? '' : count < 5 ? 'а' : 'ов'}`;
+  document.getElementById('cartBarTotal').textContent = formatPrice(cartTotal());
+}
+
+function openCart() {
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('drawer').classList.add('show');
+  renderDrawer();
+}
+
+function closeCart() {
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('drawer').classList.remove('show');
+}
+
+function renderDrawer() {
+  const entries = cartEntries();
+  const lineItems = document.getElementById('lineItems');
+  const totalRow = document.getElementById('drawerTotal');
+  const form = document.getElementById('checkoutForm');
+
+  if (entries.length === 0) {
+    lineItems.innerHTML = '<div class="empty-cart">Корзина пока пуста 🌶️<br>Добавьте что-нибудь острое.</div>';
+    totalRow.style.display = 'none';
+    form.style.display = 'none';
+    return;
+  }
+
+  lineItems.innerHTML = entries.map(e => `
+    <div class="line-item">
+      <div>
+        <div class="name">${e.product.name}</div>
+        <div class="sub">${e.qty} × ${formatPrice(e.product.price)}</div>
+      </div>
+      <div>${formatPrice(e.product.price * e.qty)}</div>
+    </div>
+  `).join('');
+  totalRow.style.display = 'flex';
+  document.getElementById('drawerTotalValue').textContent = formatPrice(cartTotal());
+  form.style.display = 'block';
+}
+
+let capturedLocation = null;
+
+function requestLocation() {
+  const btn = document.getElementById('locationBtn');
+  const status = document.getElementById('locationStatus');
+  status.textContent = 'Определяем местоположение…';
+
+  // Предпочитаем нативный Telegram LocationManager (Bot API 8.0+), если доступен
+  if (tg && tg.LocationManager) {
+    tg.LocationManager.init(() => {
+      tg.LocationManager.getLocation((data) => {
+        if (data) {
+          capturedLocation = { lat: data.latitude, lon: data.longitude };
+          onLocationCaptured(btn, status);
+        } else {
+          status.textContent = 'Не удалось получить геопозицию. Впиши адрес вручную.';
+        }
+      });
+    });
+    return;
+  }
+
+  // Фолбэк: обычный браузерный Geolocation API
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        capturedLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        onLocationCaptured(btn, status);
+      },
+      () => {
+        status.textContent = 'Доступ к геопозиции не разрешён. Впиши адрес вручную.';
+      }
+    );
+  } else {
+    status.textContent = 'Геопозиция недоступна на этом устройстве. Впиши адрес вручную.';
+  }
+}
+
+function onLocationCaptured(btn, status) {
+  btn.textContent = '✅ Геопозиция получена';
+  btn.classList.add('confirmed');
+  status.textContent = `Координаты: ${capturedLocation.lat.toFixed(4)}, ${capturedLocation.lon.toFixed(4)}`;
+  if (tg) tg.HapticFeedback.notificationOccurred('success');
+}
+
+function submitOrder() {
+  const name = document.getElementById('fName').value.trim();
+  const phone = document.getElementById('fPhone').value.trim();
+  const address = document.getElementById('fAddress').value.trim();
+
+  if (!name || !phone || (!address && !capturedLocation)) {
+    if (tg) tg.HapticFeedback.notificationOccurred('error');
+    alert('Пожалуйста, заполни имя, телефон и укажи доставку (геопозицию или адрес).');
+    return;
+  }
+
+  const order = {
+    items: cartEntries().map(e => ({ name: e.product.name, qty: e.qty, price: e.product.price })),
+    total: cartTotal(),
+    name, phone,
+    location: capturedLocation,
+    address: capturedLocation ? null : address,
+  };
+
+  if (tg) {
+    tg.sendData(JSON.stringify(order));
+    tg.close();
+  } else {
+    alert('Заказ оформлен (демо-режим вне Telegram):\n\n' + JSON.stringify(order, null, 2));
+  }
+}
+
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeCat = chip.dataset.cat;
+    renderGrid();
+  });
+});
+
+renderGrid();
+updateCartBar();
+</script>
+
+</body>
+</html>
